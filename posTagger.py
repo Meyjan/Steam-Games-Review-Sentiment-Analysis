@@ -41,8 +41,8 @@ class posTagger:
             lemma = self.lemmatizer.lemmatize(token, self.get_wordnet_pos(token))
             
             #filtering
-            if (lemma not in self.stopwords and len(lemma)>1):
-                temp.append(lemma)
+            # if (lemma not in self.stopwords and len(lemma)>1):
+            #     temp.append(lemma)
         tokens = copy.copy(temp)
         
         return tokens
