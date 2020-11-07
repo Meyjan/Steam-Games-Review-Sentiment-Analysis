@@ -20,14 +20,7 @@ from sklearn.utils import shuffle
 
 from gensim.models import KeyedVectors
 
-class posTagger:
-    def __init__(self):
-        # self.lemmatizer = WordNetLemmatizer()
-        # self.stopwords = stopwords.words('english')
-        self.word2int = None
-        self.tag2int = None
-        self.MAX_LENGTH = None
-        
+class posTagger:        
     def clean_non_char(self, sentence):
         #replace all non characters with whitespace
         cleaned = re.sub("[^A-Za-z]+", " ", sentence)
@@ -92,38 +85,27 @@ class posTagger:
     
     def load(self, path):
         with open(path, 'rb') as f:
-            self.word2int, self.tag2int, self.MAX_LENGTH = pickle.load(f)
+            word2int, tag2int, MAX_LENGTH = pickle.load(f)
+            return word2int, tag2int, MAX_LENGTH
     
     def pos_tag(self, token_list):
         bi_lstm_model = load_model("bi_lstm_model.h5")
-        self.load('PickledData/data.pkl')
+        word2int, tag2int, MAX_LENGTH = self.load('PickledData/data.pkl')
 
         input_sequences = []
         for sentence in token_list:
             sentence_int = []
             for word in sentence:
                 try:
-                    sentence_int.append(self.word2int[w.lower()])
+                    sentence_int.append(word2int[word.lower()])
                 except:
-                    sentence_int.append(self.word2int['-OOV-'])
+                    sentence_int.append(word2int['-OOV-'])
             input_sequences.append(sentence_int)
         
-        input_sequences = pad_sequences(input_sequences, maxlen=self.MAX_LENGTH, padding='post')
+        input_sequences = pad_sequences(input_sequences, maxlen=MAX_LENGTH, padding='post')
         
         predictions = bi_lstm_model.predict(input_sequences)
-        return self.logits_to_tokens(predictions, {i: t for t, i in self.tag2int.items()})
-    
-    # def ignore_class_accuracy(self, to_ignore=0):
-    #     def ignore_accuracy(y_true, y_pred):
-    #         y_true_class = backend.argmax(y_true, axis=-1)
-    #         y_pred_class = backend.argmax(y_pred, axis=-1)
-    
-    #         ignore_mask = backend.cast(backend.not_equal(y_pred_class, to_ignore), 'int32')
-    #         matches = backend.cast(backend.equal(y_true_class, y_pred_class), 'int32') * ignore_mask
-    #         accuracy = backend.sum(matches) / backend.maximum(backend.sum(ignore_mask), 1)
-    #         return accuracy
-    #     return ignore_accuracy
- 
+        return self.logits_to_tokens(predictions, {i: t for t, i in tag2int.items()})
 
     def execute(self):
         # data = pd.read_csv(file_name)
@@ -234,82 +216,6 @@ class posTagger:
 
         with open('PickledData/data.pkl', 'wb') as f:
             pickle.dump(pickle_files, f)
-
-        # word_tokenizer = Tokenizer(num_words = 500, filters='!"#$%&()*+,-./:;<=>?@[\]^`{|}~\t\n', lower=True, oov_token='<<OOV>>')
-        # word_tokenizer.fit_on_texts(X)
-        # X_encoded = word_tokenizer.texts_to_sequences(X)
-
-        # tag_tokenizer = Tokenizer(num_words = 500, filters='!"#$%&()*+,-./:;<=>?@[\]^`{|}~\t\n', lower=True, oov_token='<<OOV>>')
-        # tag_tokenizer.fit_on_texts(Y)
-        # Y_encoded = tag_tokenizer.texts_to_sequences(Y)
-
-        # MAX_SEQ_LENGTH = 100
-
-        # X_padded = pad_sequences(X_encoded, maxlen=MAX_SEQ_LENGTH, truncating="post")
-        # Y_padded = pad_sequences(Y_encoded, maxlen=MAX_SEQ_LENGTH, truncating="post")
-
-        # X, Y = X_padded, Y_padded
-
-        # modelPath = './GoogleNews-vectors-negative300.bin'
-        # word2vec = KeyedVectors.load_word2vec_format(modelPath, binary=True)
-
-        # EMBEDDING_SIZE  = 300
-        # VOCABULARY_SIZE = len(word_tokenizer.word_index) + 1
-
-        # # create an empty embedding matix
-        # embedding_weights = np.zeros((VOCABULARY_SIZE, EMBEDDING_SIZE))
-
-        # # create a word to index dictionary mapping
-        # word2id = word_tokenizer.word_index
-
-        # # copy vectors from word2vec model to the words present in corpus
-        # for word, index in word2id.items():
-        #     try:
-        #         embedding_weights[index, :] = word2vec[word]
-        #     except KeyError:
-        #         pass
-        
-        # Y = to_categorical(Y)
-
-        # TEST_SIZE = 0.15
-        # X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=TEST_SIZE, random_state=4)
-
-        # VALID_SIZE = 0.15
-        # X_train, X_validation, Y_train, Y_validation = train_test_split(X_train, Y_train, test_size=VALID_SIZE, random_state=4)
-        
-        # lstm_model = Sequential()
-        # lstm_model.add(Embedding(input_dim     = VOCABULARY_SIZE,\
-        #                         output_dim    = EMBEDDING_SIZE,\
-        #                         input_length  = MAX_SEQ_LENGTH,\
-        #                         weights       = [embedding_weights],\
-        #                         trainable     = True
-        # ))
-        # lstm_model.add(LSTM(64, return_sequences=True))
-        # NUM_CLASSES = Y.shape[2]
-        # lstm_model.add(TimeDistributed(Dense(NUM_CLASSES, activation='softmax')))
-
-        # lstm_model.compile(loss      =  'categorical_crossentropy',\
-        #                     optimizer =  'adam',\
-        #                     metrics   =  ['acc'])
-        
-        # lstm_model.summary()
-
-        # lstm_training = lstm_model.fit(X_train, Y_train, batch_size=128, epochs=1, validation_data=(X_validation, Y_validation))
-        
-        # lstm_model.save('lstm_model.h5')
-
-        # model = load_model('lstm_model.h5')
-
-        # sentence = [["Pierre Vinken, 61 years old, will join the board as a nonexecutive director Nov. 29."]]
-        # word_tokenizer.fit_on_texts(sentence)
-        # X_encoded = word_tokenizer.texts_to_sequences(sentence)
-        # X_padded = pad_sequences(X_encoded, maxlen=MAX_SEQ_LENGTH, truncating="post")
-        # prediction = model.predict(X_padded)
-        # reverse_word_map = dict(map(reversed, tag_tokenizer.word_index.items()))
-        # print(reverse_word_map)
-        # for i in prediction:
-        #     for j in i:
-        #         print(reverse_word_map[np.argmax(j)+1])
 
 if __name__ == "__main__":
     test_samples = [
