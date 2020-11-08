@@ -1,0 +1,30 @@
+Epoch 1/10
+806/806 [==============================] - ETA: 0s - loss: 5.9594e-08 - accuracy: 0.5186WARNING:tensorflow:Early stopping conditioned on metric `val_acc` which is not available. Available metrics are: loss,accuracy,val_loss,val_accuracy
+806/806 [==============================] - 235s 291ms/step - loss: 5.9594e-08 - accuracy: 0.5186 - val_loss: 5.9814e-08 - val_accuracy: 0.5146
+Epoch 2/10
+806/806 [==============================] - ETA: 0s - loss: 5.9594e-08 - accuracy: 0.5165WARNING:tensorflow:Early stopping conditioned on metric `val_acc` which is not available. Available metrics are: loss,accuracy,val_loss,val_accuracy
+806/806 [==============================] - 233s 289ms/step - loss: 5.9594e-08 - accuracy: 0.5165 - val_loss: 5.9814e-08 - val_accuracy: 0.5146
+Epoch 3/10
+806/806 [==============================] - ETA: 0s - loss: 5.9594e-08 - accuracy: 0.5171WARNING:tensorflow:Early stopping conditioned on metric `val_acc` which is not available. Available metrics are: loss,accuracy,val_loss,val_accuracy
+806/806 [==============================] - 232s 287ms/step - loss: 5.9594e-08 - accuracy: 0.5171 - val_loss: 5.9814e-08 - val_accuracy: 0.5146
+Epoch 4/10
+806/806 [==============================] - ETA: 0s - loss: 5.9594e-08 - accuracy: 0.5157WARNING:tensorflow:Early stopping conditioned on metric `val_acc` which is not available. Available metrics are: loss,accuracy,val_loss,val_accuracy
+806/806 [==============================] - 233s 289ms/step - loss: 5.9594e-08 - accuracy: 0.5157 - val_loss: 5.9814e-08 - val_accuracy: 0.5146
+Epoch 5/10
+806/806 [==============================] - ETA: 0s - loss: 5.9594e-08 - accuracy: 0.5164WARNING:tensorflow:Early stopping conditioned on metric `val_acc` which is not available. Available metrics are: loss,accuracy,val_loss,val_accuracy
+806/806 [==============================] - 234s 290ms/step - loss: 5.9594e-08 - accuracy: 0.5164 - val_loss: 5.9814e-08 - val_accuracy: 0.5146
+Epoch 6/10
+806/806 [==============================] - ETA: 0s - loss: 5.9594e-08 - accuracy: 0.5166WARNING:tensorflow:Early stopping conditioned on metric `val_acc` which is not available. Available metrics are: loss,accuracy,val_loss,val_accuracy
+806/806 [==============================] - 233s 289ms/step - loss: 5.9594e-08 - accuracy: 0.5166 - val_loss: 5.9814e-08 - val_accuracy: 0.5146
+Epoch 7/10
+806/806 [==============================] - ETA: 0s - loss: 5.9594e-08 - accuracy: 0.5155WARNING:tensorflow:Early stopping conditioned on metric `val_acc` which is not available. Available metrics are: loss,accuracy,val_loss,val_accuracy
+806/806 [==============================] - 236s 292ms/step - loss: 5.9594e-08 - accuracy: 0.5155 - val_loss: 5.9814e-08 - val_accuracy: 0.5146
+Epoch 8/10
+806/806 [==============================] - ETA: 0s - loss: 5.9594e-08 - accuracy: 0.5175WARNING:tensorflow:Early stopping conditioned on metric `val_acc` which is not available. Available metrics are: loss,accuracy,val_loss,val_accuracy
+806/806 [==============================] - 235s 291ms/step - loss: 5.9594e-08 - accuracy: 0.5175 - val_loss: 5.9814e-08 - val_accuracy: 0.5146
+Epoch 9/10
+806/806 [==============================] - ETA: 0s - loss: 5.9594e-08 - accuracy: 0.5166WARNING:tensorflow:Early stopping conditioned on metric `val_acc` which is not available. Available metrics are: loss,accuracy,val_loss,val_accuracy
+806/806 [==============================] - 233s 289ms/step - loss: 5.9594e-08 - accuracy: 0.5166 - val_loss: 5.9814e-08 - val_accuracy: 0.5146
+Epoch 10/10
+806/806 [==============================] - ETA: 0s - loss: 5.9594e-08 - accuracy: 0.5170WARNING:tensorflow:Early stopping conditioned on metric `val_acc` which is not available. Available metrics are: loss,accuracy,val_loss,val_accuracy
+806/806 [==============================] - 233s 289ms/step - loss: 5.9594e-08 - accuracy: 0.5170 - val_loss: 5.9814e-08 - val_accuracy: 0.5146
