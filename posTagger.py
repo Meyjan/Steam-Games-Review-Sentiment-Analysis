@@ -55,11 +55,20 @@ class posTagger:
                 except:
                     sentence_int.append(word2int['-OOV-'])
             input_sequences.append(sentence_int)
-        
-        input_sequences = pad_sequences(input_sequences, maxlen=MAX_LENGTH, padding='pre') 
+        input_sequences = pad_sequences(input_sequences, maxlen=MAX_LENGTH, padding='pre')
         predictions = bi_lstm_model.predict(input_sequences)
 
-        return self.logits_to_tokens(predictions, {i: t for t, i in tag2int.items()})
+        tag_result = self.logits_to_tokens(predictions, {i: t for t, i in tag2int.items()})
+        result = []
+        for i in range(len(token_list)):
+            if (len(token_list[i]) != len(tag_result[i])):
+                diff = len(token_list[i]) - len(tag_result[i])
+                if (diff > 0):
+                    for j in range(diff):
+                        tag_result[i].insert(0, 'NOUN')
+            result.append(list(zip(token_list[i], tag_result[i])))
+        
+        return result
 
     def execute(self):
         treebank_corpus = treebank.tagged_sents(tagset='universal')
@@ -97,6 +106,7 @@ class posTagger:
         
         tag2int = {t: i + 1 for i, t in enumerate(list(tags))}
         tag2int['-PAD-'] = 0
+        
 
         X_train_ = []
         X_test_ = []
@@ -161,6 +171,12 @@ if __name__ == "__main__":
         "I was running every day for a month .".split(),
         "like games get garry s mod everything like games pretty much garry s mod nuff said".split(),
         "way game warped way modding community community kept game alive years forced turn ruined game longer exist innocent modding community community built solely mutual respect love game hobby good faith recommend game anyone current state nothing positive supersede massive negative implemented valve".split()
+    ]
+
+    test_samples = [
+        ['skyrim', 'nt', 'good', 'game', 'without', 'mods', 'fact', 'might', 'pay', 'mods', 'make', 'bugthesda', 's', 'game', 'playable', 'rubbish'],
+        ['addictive', 'game', 'ever', 'made'],
+        ['counter', 'strike', 'even', 'fight', 'highly', 'trained', 'american', 'antiterrorist', 'team', 'using', 'latest', 'military', 'technology', 'battle', 'group', 'really', 'madmen', 'possessing', 'crude', 'bomb', 'surplus', 'ussr', 's', 'army', 'supplies', 'despite', 'training', 'technology', 'terrorists', 'still', 'good', 'chance', 'blowing', 'market', 'therefore', 'much', 'like', 'real', 'life', 'game', 'currently', 'full', 'hackers', 'fly', 'top', 'map', 'unless', 'hack', 'like', 'getting', 'aerial', 'teabag', 'please', 'play', 'better', 'counter', 'strike', 'sauce', 'counter', 'strike', 'go', 'game', 'game', 'day', 'exists', 'historical', 'purposes', 'remember', 'times', 'internet', 'cafe', 'mosque', 'full', 'game']
     ]
 
     for i in test_samples:
