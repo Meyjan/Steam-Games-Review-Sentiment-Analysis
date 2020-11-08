@@ -56,9 +56,9 @@ class posTagger:
                     sentence_int.append(word2int['-OOV-'])
             input_sequences.append(sentence_int)
         
-        input_sequences = pad_sequences(input_sequences, maxlen=MAX_LENGTH, padding='pre')
-        
+        input_sequences = pad_sequences(input_sequences, maxlen=MAX_LENGTH, padding='pre') 
         predictions = bi_lstm_model.predict(input_sequences)
+
         return self.logits_to_tokens(predictions, {i: t for t, i in tag2int.items()})
 
     def execute(self):
@@ -159,10 +159,16 @@ if __name__ == "__main__":
     test_samples = [
         "running is very important for me .".split(),
         "I was running every day for a month .".split(),
-        "like games get garry s mod everything like games pretty much garry s mod nuff said".split()
+        "like games get garry s mod everything like games pretty much garry s mod nuff said".split(),
+        "way game warped way modding community community kept game alive years forced turn ruined game longer exist innocent modding community community built solely mutual respect love game hobby good faith recommend game anyone current state nothing positive supersede massive negative implemented valve".split()
     ]
+
+    for i in test_samples:
+        print(len(i))
 
     # print(test_samples)
     posTag = posTagger()
     # posTag.execute()
-    print(posTag.pos_tag(test_samples))
+    result = posTag.pos_tag(test_samples)
+    for res in result:
+        print(len(res))
