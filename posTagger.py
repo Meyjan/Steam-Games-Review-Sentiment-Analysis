@@ -1,63 +1,16 @@
-import pandas as pd
 import numpy as np
-import re
-import nltk
-import copy
 import pickle
 import os
-from nltk.corpus import stopwords, wordnet, brown, treebank, conll2000
-from nltk.stem import WordNetLemmatizer
+from nltk.corpus import wordnet, brown, treebank, conll2000
 from keras.models import Sequential, Model, load_model
 from keras.layers import InputLayer, LSTM, Embedding, TimeDistributed, Dense, Bidirectional, Activation
 from keras.preprocessing.sequence import pad_sequences
-from keras.preprocessing.text import Tokenizer
-from keras.utils.np_utils import to_categorical
 from keras.optimizers import Adam
 from keras import backend
 
 from sklearn.model_selection import train_test_split
-from sklearn.utils import shuffle
-
-from gensim.models import KeyedVectors
 
 class posTagger:        
-    def clean_non_char(self, sentence):
-        #replace all non characters with whitespace
-        cleaned = re.sub("[^A-Za-z]+", " ", sentence)
-
-        #replace duplicate whitespace into one whitespace
-        ' '.join(cleaned.split())
-        
-        #case folding and remove header and trailer whitespace
-        return cleaned.lower().strip()
-
-    def get_wordnet_pos(self, word):
-        tag = nltk.pos_tag([word])[0][1][0].upper()
-        tag_dict = {"J": wordnet.ADJ,
-                    "N": wordnet.NOUN,
-                    "V": wordnet.VERB,
-                    "R": wordnet.ADV}
-
-        return tag_dict.get(tag, wordnet.NOUN)
-
-    def preprocess(self, sentence):
-        lowercase_only_text = self.clean_non_char(sentence)
-        
-        #tokenization
-        tokens = nltk.word_tokenize(lowercase_only_text)
-        
-        #lemmatization
-        temp = []
-        for token in tokens:
-            lemma = self.lemmatizer.lemmatize(token, self.get_wordnet_pos(token))
-            
-            #filtering
-            # if (lemma not in self.stopwords and len(lemma)>1):
-            #     temp.append(lemma)
-        tokens = copy.copy(temp)
-        
-        return tokens
-    
     def to_categorical(self, sequences, categories):
         cat_sequences = []
         for s in sequences:
@@ -71,12 +24,13 @@ class posTagger:
     def logits_to_tokens(self, sequences, index):
         token_sequences = []
         for categorical_sequence in sequences:
+            not_padding = False
             token_sequence = []
             for categorical in categorical_sequence:
                 tag = index[np.argmax(categorical)]
-                if (tag == "-PAD-"):
-                    break
-                else:
+                if (tag != "-PAD-"):
+                    not_padding = True
+                if (not_padding):
                     token_sequence.append(tag)
     
             token_sequences.append(token_sequence)
@@ -102,28 +56,17 @@ class posTagger:
                     sentence_int.append(word2int['-OOV-'])
             input_sequences.append(sentence_int)
         
-        input_sequences = pad_sequences(input_sequences, maxlen=MAX_LENGTH, padding='post')
+        input_sequences = pad_sequences(input_sequences, maxlen=MAX_LENGTH, padding='pre')
         
         predictions = bi_lstm_model.predict(input_sequences)
         return self.logits_to_tokens(predictions, {i: t for t, i in tag2int.items()})
 
     def execute(self):
-        # data = pd.read_csv(file_name)
-        # training_data = data['review']
-        # training_target = data['rating']
-
-        # tagged_result = []
-        # for review in training_data:
-        #     tagged = nltk.pos_tag(self.preprocess(review))
-        #     tagged_result.append(tagged)
-
         treebank_corpus = treebank.tagged_sents(tagset='universal')
         brown_corpus = brown.tagged_sents(tagset='universal')
         conll_corpus = conll2000.tagged_sents(tagset='universal')
         tagged_sentences = treebank_corpus + brown_corpus + conll_corpus
 
-        # words = []
-        # tags = []
         X = []
         Y = []
 
@@ -132,14 +75,9 @@ class posTagger:
             tags_temp = []
             for pair in sentence:         
                 words_temp.append(pair[0])
-                # words.append(pair[0])
                 tags_temp.append(pair[1])
-                # tags.append(pair[1])
             X.append(words_temp)
             Y.append(tags_temp)
-
-        # words = set(words)
-        # tags = set(tags)
 
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
         words = set([])
@@ -190,10 +128,10 @@ class posTagger:
             Y_test_.append([tag2int[i] for i in tag])
 
         MAX_LENGTH = len(max(X_train_, key=len))
-        X_train_ = pad_sequences(X_train_, maxlen=MAX_LENGTH, padding='post')
-        X_test_ = pad_sequences(X_test_, maxlen=MAX_LENGTH, padding='post')
-        Y_train_ = pad_sequences(Y_train_, maxlen=MAX_LENGTH, padding='post')
-        X_test_ = pad_sequences(X_test_, maxlen=MAX_LENGTH, padding='post')
+        X_train_ = pad_sequences(X_train_, maxlen=MAX_LENGTH, padding='pre')
+        X_test_ = pad_sequences(X_test_, maxlen=MAX_LENGTH, padding='pre')
+        Y_train_ = pad_sequences(Y_train_, maxlen=MAX_LENGTH, padding='pre')
+        X_test_ = pad_sequences(X_test_, maxlen=MAX_LENGTH, padding='pre')
 
         bi_lstm_model = Sequential()
         bi_lstm_model.add(InputLayer(input_shape=(MAX_LENGTH,)))
@@ -220,7 +158,8 @@ class posTagger:
 if __name__ == "__main__":
     test_samples = [
         "running is very important for me .".split(),
-        "I was running every day for a month .".split()
+        "I was running every day for a month .".split(),
+        "like games get garry s mod everything like games pretty much garry s mod nuff said".split()
     ]
 
     # print(test_samples)
