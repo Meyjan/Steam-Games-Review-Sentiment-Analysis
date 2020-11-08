@@ -166,9 +166,9 @@ if __name__ == "__main__":
     for i in test_samples:
         print(len(i))
 
-    # print(test_samples)
     posTag = posTagger()
     # posTag.execute()
     result = posTag.pos_tag(test_samples)
     for res in result:
+        print(res)
         print(len(res))
