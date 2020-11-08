@@ -43,7 +43,7 @@ class posTagger:
             return word2int, tag2int, MAX_LENGTH
     
     def pos_tag(self, token_list):
-        bi_lstm_model = load_model("bi_lstm_model.h5")
+        bi_lstm_model = load_model("model/bi_lstm_model.h5")
         word2int, tag2int, MAX_LENGTH = self.load('PickledData/data.pkl')
 
         input_sequences = []
@@ -145,7 +145,7 @@ class posTagger:
 
         bi_lstm_model.fit(X_train_, self.to_categorical(Y_train_, len(tag2int)), batch_size=128, epochs=3, validation_split=0.2)
 
-        bi_lstm_model.save("bi_lstm_model.h5")
+        bi_lstm_model.save("model/bi_lstm_model.h5")
 
         pickle_files = [word2int, tag2int, MAX_LENGTH]
 
