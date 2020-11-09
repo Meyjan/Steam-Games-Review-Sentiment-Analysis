@@ -112,7 +112,7 @@ class posTagger:
 
         bi_lstm_model = Sequential()
         bi_lstm_model.add(InputLayer(input_shape=(MAX_LENGTH,)))
-        bi_lstm_model.add(Embedding(len(word_tokenizer.word_index), 128))
+        bi_lstm_model.add(Embedding(len(word_tokenizer.word_index)+1, 128))
         bi_lstm_model.add(Bidirectional(LSTM(256, return_sequences=True)))
         bi_lstm_model.add(Dropout(0.1))
         bi_lstm_model.add(TimeDistributed(Dense(len(tag_tokenizer.word_index))))
