@@ -3,39 +3,40 @@ import pickle
 import os
 from nltk.corpus import wordnet, brown, treebank, conll2000
 from keras.models import Sequential, Model, load_model
-from keras.layers import InputLayer, LSTM, Embedding, TimeDistributed, Dense, Bidirectional, Activation
+from keras.layers import (
+    InputLayer, 
+    LSTM, 
+    Embedding, 
+    TimeDistributed, 
+    Dense, 
+    Bidirectional, 
+    Activation,
+    Dropout
+)
+from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.optimizers import Adam
+from keras.utils.np_utils import to_categorical
 from keras import backend
 
 from sklearn.model_selection import train_test_split
 
-class posTagger:        
-    def to_categorical(self, sequences, categories):
-        cat_sequences = []
-        for s in sequences:
-            cats = []
-            for item in s:
-                cats.append(np.zeros(categories))
-                cats[-1][item] = 1.0
-            cat_sequences.append(cats)
-        return np.array(cat_sequences)
-    
-    def logits_to_tokens(self, sequences, index):
-        token_sequences = []
-        for categorical_sequence in sequences:
+class posTagger:            
+    def sequences_to_tags(self, predictions, tag_map):
+        tag_result = []
+        for prediction in predictions:
             not_padding = False
-            token_sequence = []
-            for categorical in categorical_sequence:
-                tag = index[np.argmax(categorical)]
-                if (tag != "-PAD-"):
+            tag_list = []
+            for index in prediction:
+                tag = tag_map[np.argmax(index)]
+                if (tag != "<<PAD>>"):
                     not_padding = True
                 if (not_padding):
-                    token_sequence.append(tag)
+                    tag_list.append(tag)
     
-            token_sequences.append(token_sequence)
+            tag_result.append(tag_list)
     
-        return token_sequences
+        return tag_result
     
     def load(self, path):
         with open(path, 'rb') as f:
@@ -44,21 +45,15 @@ class posTagger:
     
     def pos_tag(self, token_list):
         bi_lstm_model = load_model("model/bi_lstm_model.h5")
-        word2int, tag2int, MAX_LENGTH = self.load('PickledData/data.pkl')
-
-        input_sequences = []
-        for sentence in token_list:
-            sentence_int = []
-            for word in sentence:
-                try:
-                    sentence_int.append(word2int[word.lower()])
-                except:
-                    sentence_int.append(word2int['-OOV-'])
-            input_sequences.append(sentence_int)
+        word_tokenizer, tag_tokenizer, MAX_LENGTH = self.load('PickledData/data.pkl')
+        
+        input_sequences = word_tokenizer.texts_to_sequences(token_list)
         input_sequences = pad_sequences(input_sequences, maxlen=MAX_LENGTH, padding='pre')
         predictions = bi_lstm_model.predict(input_sequences)
 
-        tag_result = self.logits_to_tokens(predictions, {i: t for t, i in tag2int.items()})
+        reverse_tag_map = dict(map(reversed, tag_tokenizer.word_index.items()))
+        tag_result = self.sequences_to_tags(predictions, reverse_tag_map)
+
         result = []
         for i in range(len(token_list)):
             if (len(token_list[i]) != len(tag_result[i])):
@@ -76,6 +71,11 @@ class posTagger:
         conll_corpus = conll2000.tagged_sents(tagset='universal')
         tagged_sentences = treebank_corpus + brown_corpus + conll_corpus
 
+        TEST_SIZE = 0.1
+        VAL_SIZE = 0.15
+        EPOCH_COUNT = 3
+        BATCH_SIZE = 128
+
         X = []
         Y = []
 
@@ -88,76 +88,44 @@ class posTagger:
             X.append(words_temp)
             Y.append(tags_temp)
 
-        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
-        words = set([])
-        tags = set([])
+        words = set([word.lower() for sentence in X for word in sentence])
+        tags = set([tag for sentence in Y for tag in sentence])
 
-        for sentence in X_train:
-            for word in sentence:
-                words.add(word.lower())
-        
-        for sentence_tags in Y_train:
-            for tag in sentence_tags:
-                tags.add(tag)
-            
-        word2int = {w: i + 2 for i, w in enumerate(list(words))}
-        word2int['-PAD-'] = 0
-        word2int['-OOV-'] = 1
-        
-        tag2int = {t: i + 1 for i, t in enumerate(list(tags))}
-        tag2int['-PAD-'] = 0
-        
+        word_tokenizer = Tokenizer(lower=True, oov_token='<<OOV>>')
+        word_tokenizer.fit_on_texts(X)
+        X_sequence = word_tokenizer.texts_to_sequences(X)
 
-        X_train_ = []
-        X_test_ = []
-        Y_train_ = []
-        Y_test_ = []
+        tag_tokenizer = Tokenizer(lower=False)
+        tag_tokenizer.fit_on_texts(Y)
+        Y_sequence = tag_tokenizer.texts_to_sequences(Y)
+        tag_tokenizer.word_index['<<PAD>>'] = 0
 
-        for sentence in X_train:
-            sentence_int = []
-            for word in sentence:
-                try:
-                    sentence_int.append(word2int[word.lower()])
-                except:
-                    sentence_int.append(word2int['-OOV-'])
-            X_train_.append(sentence_int)
-        
-        for sentence in X_test:
-            sentence_int = []
-            for word in sentence:
-                try:
-                    sentence_int.append(word2int[w.lower()])
-                except:
-                    sentence_int.append(word2int['-OOV-'])
-            X_test_.append(sentence_int)
-        
-        for tag in Y_train:
-            Y_train_.append([tag2int[i] for i in tag])
-        
-        for tag in Y_test:
-            Y_test_.append([tag2int[i] for i in tag])
+        X_train_, X_test_, Y_train_, Y_test_ = train_test_split(X_sequence, Y_sequence, test_size=TEST_SIZE)
 
         MAX_LENGTH = len(max(X_train_, key=len))
         X_train_ = pad_sequences(X_train_, maxlen=MAX_LENGTH, padding='pre')
         X_test_ = pad_sequences(X_test_, maxlen=MAX_LENGTH, padding='pre')
         Y_train_ = pad_sequences(Y_train_, maxlen=MAX_LENGTH, padding='pre')
-        X_test_ = pad_sequences(X_test_, maxlen=MAX_LENGTH, padding='pre')
+        Y_test_ = pad_sequences(Y_test_, maxlen=MAX_LENGTH, padding='pre')
+
+        Y_train_ = to_categorical(Y_train_)
 
         bi_lstm_model = Sequential()
         bi_lstm_model.add(InputLayer(input_shape=(MAX_LENGTH,)))
-        bi_lstm_model.add(Embedding(len(word2int), 128))
+        bi_lstm_model.add(Embedding(len(word_tokenizer.word_index), 128))
         bi_lstm_model.add(Bidirectional(LSTM(256, return_sequences=True)))
-        bi_lstm_model.add(TimeDistributed(Dense(len(tag2int))))
+        bi_lstm_model.add(Dropout(0.1))
+        bi_lstm_model.add(TimeDistributed(Dense(len(tag_tokenizer.word_index))))
         bi_lstm_model.add(Activation('softmax'))
         bi_lstm_model.summary()
 
         bi_lstm_model.compile(loss='categorical_crossentropy', optimizer=Adam(0.001), metrics=['accuracy'])
 
-        bi_lstm_model.fit(X_train_, self.to_categorical(Y_train_, len(tag2int)), batch_size=128, epochs=3, validation_split=0.2)
+        bi_lstm_model.fit(X_train_, Y_train_, batch_size=BATCH_SIZE, epochs=EPOCH_COUNT, validation_split=VAL_SIZE)
 
         bi_lstm_model.save("model/bi_lstm_model.h5")
 
-        pickle_files = [word2int, tag2int, MAX_LENGTH]
+        pickle_files = [word_tokenizer, tag_tokenizer, MAX_LENGTH]
 
         if not os.path.exists('PickledData/'):
             os.makedirs('PickledData/')
