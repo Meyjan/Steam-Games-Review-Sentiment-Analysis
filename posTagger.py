@@ -122,9 +122,11 @@ class posTagger:
         bi_lstm_model.compile(loss='categorical_crossentropy', optimizer=Adam(0.001), metrics=['accuracy'])
 
         bi_lstm_model.fit(X_train_, Y_train_, batch_size=BATCH_SIZE, epochs=EPOCH_COUNT, validation_split=VAL_SIZE)
+        score = bi_lstm_model.evaluate(X_test_, to_categorical(Y_test_))
+        
+        print(f"accuracy: {score[1]}")
 
         bi_lstm_model.save("model/bi_lstm_model.h5")
-
         pickle_files = [word_tokenizer, tag_tokenizer, MAX_LENGTH]
 
         if not os.path.exists('PickledData/'):
@@ -147,12 +149,8 @@ if __name__ == "__main__":
         ['counter', 'strike', 'even', 'fight', 'highly', 'trained', 'american', 'antiterrorist', 'team', 'using', 'latest', 'military', 'technology', 'battle', 'group', 'really', 'madmen', 'possessing', 'crude', 'bomb', 'surplus', 'ussr', 's', 'army', 'supplies', 'despite', 'training', 'technology', 'terrorists', 'still', 'good', 'chance', 'blowing', 'market', 'therefore', 'much', 'like', 'real', 'life', 'game', 'currently', 'full', 'hackers', 'fly', 'top', 'map', 'unless', 'hack', 'like', 'getting', 'aerial', 'teabag', 'please', 'play', 'better', 'counter', 'strike', 'sauce', 'counter', 'strike', 'go', 'game', 'game', 'day', 'exists', 'historical', 'purposes', 'remember', 'times', 'internet', 'cafe', 'mosque', 'full', 'game']
     ]
 
-    for i in test_samples:
-        print(len(i))
-
     posTag = posTagger()
-    # posTag.execute()
-    result = posTag.pos_tag(test_samples)
-    for res in result:
-        print(res)
-        print(len(res))
+    posTag.execute()
+    # result = posTag.pos_tag(test_samples)
+    # for res in result:
+    #     print(res)
